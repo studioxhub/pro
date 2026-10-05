@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f4f5ee">
+  <title>Explica Studio Ultra V13 — Carrosséis estilo X</title>
+  <meta name="description" content="Crie posts e carrosséis estilo X para Instagram, com imagens por card e exportação em alta resolução.">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/logo32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/logo16.png">
+  <link rel="shortcut icon" href="assets/favicon/favicon.ico">
+  <link rel="apple-touch-icon" href="assets/favicon/logo192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=13">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <button class="brand brand-logo-only" type="button" id="brandBtn" aria-label="Explica Studio">
+        <span class="brand-icon"><img src="assets/logo.png?v=12" alt="Explica Studio"></span>
+      </button>
+      <div class="topbar-status">
+        <span class="live-dot"></span><span data-i18n="autosave">edição ao vivo</span>
+      </div>
+      <div class="topbar-actions desktop-only">
+        <label class="mini-select"><span data-i18n="language">Idioma</span><select id="languageSelect"><option value="pt-BR">PT</option><option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option><option value="de">DE</option></select></label>
+        <button class="btn btn-light" id="resetBtn" type="button" data-i18n="newProject">Novo projeto</button>
+        <button class="btn btn-dark" id="downloadAllTopBtn" type="button"><span>↓</span><span data-i18n="downloadAll">Baixar carrossel</span></button>
+      </div>
+    </header>
+
+    <main class="workspace" id="workspace">
+      <aside class="rail desktop-only" aria-label="Seções">
+        <div class="rail-intro"><small>EXP STUDIO</small><strong>CRIE.<br>ORGANIZE.<br>EXPORTE.</strong><em>simples no celular,<br>rápido no computador.</em></div>
+        <nav class="rail-nav">
+          <button class="rail-link active" data-view="create" type="button"><b>01</b><span data-i18n="create">Criar</span></button>
+          <button class="rail-link" data-view="images" type="button"><b>02</b><span data-i18n="images">Imagens</span></button>
+          <button class="rail-link" data-view="preview" type="button"><b>03</b><span data-i18n="preview">Prévia</span></button>
+          <button class="rail-link" data-view="export" type="button"><b>04</b><span data-i18n="export">Exportar</span></button>
+        </nav>
+        <div class="rail-foot"><span class="scribble">feito para publicar</span><small>Instagram • X style</small></div>
+      </aside>
+
+      <section class="editor-area app-view active" data-view-panel="create">
+        <div class="view-heading">
+          <div><span class="kicker">01 / CRIAR</span><h1 data-i18n="createTitle">Sua publicação, sem complicação.</h1><p data-i18n="createLead">Defina o formato, perfil e texto. O carrossel é dividido automaticamente quando necessário.</p></div>
+          <span class="step-badge"><i></i><span id="slideCountBadge">1 card</span></span>
+        </div>
+
+        <section class="card section-card" id="formatCard">
+          <button class="section-head" type="button" data-collapse="formatBody"><span><b>01</b><strong data-i18n="format">Formato</strong></span><i>⌄</i></button>
+          <div class="section-body" id="formatBody">
+            <div class="format-picker">
+              <button class="format-btn active" data-format="square" type="button"><i class="ratio square"></i><span><strong data-i18n="square">Quadrado</strong><small>1080 × 1080</small></span></button>
+              <button class="format-btn" data-format="portrait" type="button"><i class="ratio portrait"></i><span><strong>Feed 4:5</strong><small>1080 × 1350</small></span></button>
+              <button class="format-btn" data-format="story" type="button"><i class="ratio story"></i><span><strong>Story 9:16</strong><small>1080 × 1920</small></span></button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card section-card" id="profileCard">
+          <button class="section-head" type="button" data-collapse="profileBody"><span><b>02</b><strong data-i18n="profile">Perfil</strong></span><i>⌄</i></button>
+          <div class="section-body" id="profileBody">
+            <div class="profile-grid">
+              <label class="avatar-picker"><input id="avatarInput" type="file" accept="image/*"><span id="avatarEditor"><b>MA</b></span><em>+</em></label>
+              <div class="form-stack">
+                <label class="field"><span data-i18n="name">Nome</span><input id="nameInput" value="Marcos Adriano" maxlength="42"></label>
+                <label class="field"><span data-i18n="handle">Usuário</span><input id="handleInput" value="@explicamarcos" maxlength="42"></label>
+              </div>
+            </div>
+            <label class="toggle-row"><input id="verifiedInput" type="checkbox" checked><span class="toggle"></span><span data-i18n="verified">Mostrar selo verificado</span></label>
+          </div>
+        </section>
+
+        <section class="card section-card" id="contentCard">
+          <button class="section-head" type="button" data-collapse="contentBody"><span><b>03</b><strong data-i18n="content">Conteúdo</strong></span><i>⌄</i></button>
+          <div class="section-body" id="contentBody">
+            <label class="field"><span data-i18n="text">Texto</span><textarea id="bodyInput" rows="11">Você conhece a Micron Technology?
+
+Uma gigante dos semicondutores que está revolucionando o mercado de memória! 💾
+
+A Micron é pioneira em DRAM e NAND, essenciais para PCs, smartphones e muito mais!
+
+Quais produtos você não vive sem?</textarea><small class="field-meta"><span><b id="charCount">0</b> <span data-i18n="characters">caracteres</span></span><span><b id="slideEstimate">1</b> <span data-i18n="cards">card(s)</span></span></small><small class="card-rule-hint card-capacity" id="capacityHint">≈ 10 linhas úteis por card neste formato</small></label>
+            <div class="grid-2"><label class="field"><span data-i18n="time">Horário</span><input id="timeInput" value="10:56 PM"></label><label class="field"><span data-i18n="date">Data</span><input id="dateInput" value="Jun 26, 2026"></label></div>
+            <label class="field"><span data-i18n="source">Fonte / dispositivo</span><input id="sourceInput" value="Nokia Tijolão"></label>
+          </div>
+        </section>
+
+        <section class="card section-card" id="styleCard">
+          <button class="section-head" type="button" data-collapse="styleBody"><span><b>04</b><strong data-i18n="appearance">Aparência</strong></span><i>⌄</i></button>
+          <div class="section-body" id="styleBody">
+            <div class="preset-grid">
+              <button class="preset active" data-preset="classic" type="button"><i class="preset-swatch classic"></i><span><strong>X Clássico</strong><small data-i18n="classicHint">limpo e direto</small></span></button>
+              <button class="preset" data-preset="explica" type="button"><i class="preset-swatch explica"></i><span><strong>Explica</strong><small data-i18n="explicaHint">verde editorial</small></span></button>
+              <button class="preset" data-preset="night" type="button"><i class="preset-swatch night"></i><span><strong data-i18n="night">Noturno</strong><small data-i18n="nightHint">alto contraste</small></span></button>
+            </div>
+            <div class="grid-2 compact-grid">
+              <label class="field"><span data-i18n="font">Fonte</span><select id="fontSelect"><option value="x">X / Helvetica</option><option value="nunito">Nunito</option><option value="system">Sistema</option><option value="serif">Serif editorial</option></select></label>
+              <label class="field"><span data-i18n="fontSize">Tamanho do texto</span><input id="fontSizeInput" type="range" min="42" max="74" value="57"><small class="range-value"><b id="fontSizeValue">57</b> px</small></label>
+            </div>
+            <details class="advanced"><summary data-i18n="advanced">Ajustes avançados</summary><div class="advanced-body">
+              <div class="colors"><label><span data-i18n="canvas">Fundo</span><input id="canvasColor" type="color" value="#ffffff"></label><label><span data-i18n="cardColor">Card</span><input id="cardColor" type="color" value="#ffffff"></label><label><span data-i18n="textColor">Texto</span><input id="textColor" type="color" value="#0f1419"></label><label><span data-i18n="muted">Secundário</span><input id="mutedColor" type="color" value="#536471"></label></div>
+              <div class="grid-2"><label class="field"><span data-i18n="corners">Cantos</span><input id="radiusInput" type="range" min="0" max="48" value="0"></label><label class="field"><span data-i18n="shadow">Sombra</span><input id="shadowInput" type="range" min="0" max="60" value="0"></label></div>
+            </div></details>
+          </div>
+        </section>
+
+        <div class="mobile-create-actions mobile-only"><button class="btn btn-light" type="button" data-mobile-view="images" data-i18n="manageImages">Gerenciar imagens</button><button class="btn btn-dark" type="button" data-mobile-view="preview" data-i18n="seePreview">Ver prévia</button></div>
+      </section>
+
+      <section class="images-area app-view" data-view-panel="images">
+        <div class="view-heading"><div><span class="kicker">02 / IMAGENS</span><h2 data-i18n="imagesTitle">Uma imagem para cada card.</h2><p data-i18n="imagesLead">Adicione uma imagem geral ou personalize cada slide do carrossel.</p></div></div>
+        <section class="card default-image-card">
+          <div class="image-card-head"><div><strong data-i18n="defaultImage">Imagem padrão</strong><small data-i18n="defaultImageHint">Pode aparecer no primeiro card ou em todos.</small></div><button class="text-btn" id="removeDefaultImageBtn" type="button" data-i18n="remove">Remover</button></div>
+          <label class="dropzone"><input id="defaultImageInput" type="file" accept="image/*"><span class="drop-icon">▧</span><span><strong data-i18n="chooseImage">Escolher imagem</strong><small id="defaultImageName">PNG, JPG ou WEBP</small></span><em>+</em></label>
+          <div class="grid-2"><label class="field"><span data-i18n="position">Posição</span><select id="imageLayoutSelect"><option value="below" data-i18n-option="below">Abaixo do texto</option><option value="side" data-i18n-option="side">Ao lado do texto</option></select></label><label class="field"><span data-i18n="applyImage">Aplicar</span><select id="defaultImageMode"><option value="first" data-i18n-option="first">Somente no 1º card</option><option value="all" data-i18n-option="all">Em todos os cards</option></select></label></div>
+        </section>
+        <div class="cards-manager-head"><div><strong data-i18n="carouselCards">Cards do carrossel</strong><small data-i18n="carouselImagesHint">Toque em um card para trocar sua imagem.</small></div><span id="managerCount">1</span></div>
+        <div class="cards-manager" id="cardsManager"></div>
+      </section>
+
+      <section class="preview-area app-view" data-view-panel="preview">
+        <div class="preview-head">
+          <div><span class="kicker">03 / PRÉVIA</span><h2 data-i18n="previewTitle">Veja antes de publicar.</h2></div>
+          <div class="pager"><button id="prevBtn" type="button">←</button><strong id="pagerText">1 / 1</strong><button id="nextBtn" type="button">→</button></div>
+        </div>
+        <div class="preview-stage" id="previewStage"><div class="stage-grid"></div><div class="canvas-wrap" id="canvasWrap">
+          <article class="social-canvas format-square" id="socialCanvas">
+            <div class="post-card">
+              <header class="post-header"><div class="avatar" id="previewAvatar"><span>MA</span><img id="previewAvatarImg" alt=""></div><div class="profile-copy"><div class="name-line"><strong id="previewName">Marcos Adriano</strong><span class="verified" id="verifiedBadge" aria-label="Verificado"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z"/></svg></span></div><span id="previewHandle">@explicamarcos</span></div><div class="more"><i></i><i></i><i></i></div></header>
+              <main class="post-main" id="postMain"><div class="post-text" id="previewBody"></div><figure class="post-media hidden" id="mediaFrame"><img id="previewImage" alt="Imagem da publicação"></figure></main>
+              <footer class="post-footer"><div class="meta"><span id="previewTime">10:56 PM</span><span>·</span><span id="previewDate">Jun 26, 2026</span><span>·</span><span id="previewSource">Nokia Tijolão</span></div><div class="divider"></div><div class="slide-number" id="slideNumber"></div></footer>
+            </div>
+          </article>
+        </div></div>
+        <div class="preview-bottom"><div class="mini-thumbs" id="miniThumbs"></div><button class="btn btn-dark" id="downloadCurrentBtn" type="button"><span>↓</span><span data-i18n="downloadCurrent">Baixar este card</span></button></div>
+      </section>
+
+      <section class="export-area app-view" data-view-panel="export">
+        <div class="view-heading"><div><span class="kicker">04 / EXPORTAR</span><h2 data-i18n="exportTitle">Pronto para publicar.</h2><p data-i18n="exportLead">Escolha a qualidade e baixe um card ou o carrossel completo.</p></div></div>
+        <section class="card export-card">
+          <div class="export-summary"><div><span data-i18n="format">Formato</span><strong id="exportFormat">1080 × 1080</strong></div><div><span data-i18n="totalCards">Cards</span><strong id="exportCards">1</strong></div></div>
+          <label class="field"><span data-i18n="quality">Qualidade</span><select id="qualitySelect"><option value="native">HD · tamanho original</option><option value="2160">2K · lado maior 2160 px</option><option value="3840">4K · lado maior 3840 px</option><option value="7680">8K · lado maior 7680 px</option></select><small class="quality-hint" id="qualityHint">1080 × 1080 px</small></label>
+          <div class="export-buttons"><button class="btn btn-light big" id="downloadCurrentExportBtn" type="button"><span>↓</span><span data-i18n="downloadCurrent">Baixar este card</span></button><button class="btn btn-dark big" id="downloadAllBtn" type="button"><span>↓</span><span data-i18n="downloadAll">Baixar carrossel</span></button></div>
+          <small class="export-note" data-i18n="exportNote">4K e 8K podem levar mais tempo em celulares com pouca memória.</small>
+        </section>
+      </section>
+    </main>
+
+    <nav class="bottom-nav mobile-only" aria-label="Navegação">
+      <button class="bottom-link active" data-mobile-view="create" type="button"><span>✦</span><b data-i18n="create">Criar</b></button>
+      <button class="bottom-link" data-mobile-view="images" type="button"><span>▧</span><b data-i18n="images">Imagens</b></button>
+      <button class="bottom-link" data-mobile-view="preview" type="button"><span>◉</span><b data-i18n="preview">Prévia</b></button>
+      <button class="bottom-link" data-mobile-view="export" type="button"><span>↓</span><b data-i18n="export">Exportar</b></button>
+    </nav>
+  </div>
+  <div class="toast" id="toast"></div>
+  <input id="cardImageInput" type="file" accept="image/*" hidden>
+  <script src="js/html2canvas.min.js?v=13"></script>
+  <script src="js/app.js?v=13"></script>
+</body>
+</html>
