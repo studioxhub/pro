@@ -14,10 +14,10 @@ const PRESETS = {
 };
 
 const FONT_MAP = {
-  x: { css:'Arial,"Helvetica Neue",Helvetica,sans-serif', canvas:'Arial' },
-  nunito: { css:'"Nunito",Arial,sans-serif', canvas:'Nunito' },
-  system: { css:'system-ui,-apple-system,"Segoe UI",sans-serif', canvas:'Arial' },
-  serif: { css:'Georgia,"Times New Roman",serif', canvas:'Georgia' },
+  x: { css:'Arial,"Helvetica Neue",Helvetica,sans-serif' },
+  system: { css:'system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif' },
+  rounded: { css:'"Arial Rounded MT Bold","Trebuchet MS",Arial,sans-serif' },
+  serif: { css:'Georgia,"Times New Roman",serif' },
 };
 
 const TXT = {
@@ -72,19 +72,17 @@ function imageItem(file){ return {name:file.name,url:safeObjectUrl(file)}; }
 function revoke(item){ if(item?.url) URL.revokeObjectURL(item.url); }
 function initials(){ return ($('nameInput').value||'Perfil').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase()||'P'; }
 
-let measureCanvas;
-function measureContext(){
-  if(!measureCanvas) measureCanvas=document.createElement('canvas');
-  const ctx=measureCanvas.getContext('2d');
-  const size=Number($('fontSizeInput').value||57);
-  const f=FONT_MAP[$('fontSelect').value]||FONT_MAP.x;
-  ctx.font=`400 ${size}px ${f.canvas}`;
-  return ctx;
+let textMeasurer=null;
+function getTextMeasurer(){
+  if(textMeasurer && textMeasurer.isConnected) return textMeasurer;
+  textMeasurer=document.createElement('div');
+  textMeasurer.className='text-measurer';
+  textMeasurer.setAttribute('aria-hidden','true');
+  document.body.appendChild(textMeasurer);
+  return textMeasurer;
 }
-function measureWidth(text){
-  const ctx=measureContext();
-  const raw=ctx?.measureText ? ctx.measureText(String(text||'')).width : String(text||'').length*Number($('fontSizeInput').value||57)*.52;
-  return raw*.985;
+function selectedFontCss(){
+  return (FONT_MAP[$('fontSelect').value]||FONT_MAP.x).css;
 }
 function getImage(index){
   if(Object.prototype.hasOwnProperty.call(state.slideImages,index)) return state.slideImages[index];
@@ -97,116 +95,100 @@ function layoutFor(index){
   const image=Boolean(getImage(index));
   const side=image && $('imageLayoutSelect').value==='side';
   const gap=side?30:0;
-  const width=side ? (cfg.innerWidth-gap)*1.13/2 : cfg.innerWidth;
-  const mediaReserve=image&&!side ? (state.format==='square'?255:state.format==='portrait'?340:470) : 0;
-  const lineHeight=size*(state.format==='story'?1.20:1.18);
-  const height=Math.max(lineHeight*3,cfg.textHeight-mediaReserve-(image&&!side?25:0));
-  const maxLines=Math.max(3,Math.floor(height/lineHeight));
-  return {width,maxLines,lineHeight,image,side};
+  const textWidth=side ? Math.floor((cfg.innerWidth-gap)*1.13/2) : cfg.innerWidth;
+  const imageReserve=image&&!side ? ({square:320,portrait:420,story:640}[state.format]||320) : 0;
+  const lineRatio=state.format==='story'?1.20:1.18;
+  const maxHeight=Math.max(size*lineRatio*3,cfg.textHeight-imageReserve-(image&&!side?25:0));
+  return {
+    width:Math.max(220,textWidth),
+    maxHeight:Math.max(180,maxHeight),
+    lineRatio,
+    maxLines:Math.max(3,Math.floor(maxHeight/(size*lineRatio))),
+    image,side
+  };
 }
-
-function tokenize(text){
-  const source=String(text||'').replace(/\r/g,'');
-  const out=[];
-  let buffer='';
-  const flush=()=>{ if(buffer){ out.push({type:'word',value:buffer}); buffer=''; } };
-  for(let i=0;i<source.length;i++){
-    const ch=source[i];
-    if(ch==='\n'){
-      flush(); out.push({type:'newline',value:'\n'});
-    }else if(/\s/.test(ch)){
-      flush();
-      if(!out.length || out[out.length-1].type!=='space') out.push({type:'space',value:' '});
-    }else buffer+=ch;
+function measureTextHeight(text,index){
+  const box=getTextMeasurer();
+  const layout=layoutFor(index);
+  const size=Number($('fontSizeInput').value||57);
+  box.style.width=`${layout.width}px`;
+  box.style.fontFamily=selectedFontCss();
+  box.style.fontSize=`${size}px`;
+  box.style.fontWeight='400';
+  box.style.lineHeight=String(layout.lineRatio);
+  box.style.letterSpacing='-.015em';
+  box.textContent=String(text||'') || '\u200b';
+  return {height:box.scrollHeight,layout};
+}
+function textFits(text,index){
+  const {height,layout}=measureTextHeight(text,index);
+  return height<=layout.maxHeight+2;
+}
+function buildBreakpoints(text){
+  const points=[];
+  const add=(pos,priority)=>{if(pos>0&&pos<=text.length)points.push({pos,priority});};
+  let m;
+  const paragraph=/\n{2,}/g; while((m=paragraph.exec(text))) add(m.index+m[0].length,5);
+  const newline=/\n/g; while((m=newline.exec(text))) add(m.index+1,4);
+  const sentence=/[.!?…]+[\]\)\}"'»”’]*\s+/gu; while((m=sentence.exec(text))) add(m.index+m[0].length,3);
+  const clause=/[;:]\s+/g; while((m=clause.exec(text))) add(m.index+m[0].length,2);
+  const whitespace=/\s+/g; while((m=whitespace.exec(text))) add(m.index+m[0].length,1);
+  add(text.length,6);
+  const map=new Map();
+  for(const p of points) map.set(p.pos,Math.max(map.get(p.pos)||0,p.priority));
+  return [...map.entries()].map(([pos,priority])=>({pos,priority})).sort((a,b)=>a.pos-b.pos);
+}
+function hardCut(text,index){
+  const boundaries=[];
+  let pos=0;
+  for(const char of Array.from(text)){pos+=char.length;boundaries.push(pos);}
+  let lo=0,hi=boundaries.length-1,best=Math.min(text.length,1);
+  while(lo<=hi){
+    const mid=(lo+hi)>>1;
+    const cut=boundaries[mid];
+    if(textFits(text.slice(0,cut),index)){best=cut;lo=mid+1;}else hi=mid-1;
   }
-  flush();
-  return out;
+  return Math.max(1,best);
 }
-function segmentLongWord(word,width){
-  const pieces=[]; let current='';
-  for(const ch of Array.from(word)){
-    const next=current+ch;
-    if(current && measureWidth(next)>width){ pieces.push(current); current=ch; }
-    else current=next;
+function chooseCut(text,index){
+  if(textFits(text,index)) return text.length;
+  const points=buildBreakpoints(text);
+  let lo=0,hi=points.length-1,bestIndex=-1;
+  while(lo<=hi){
+    const mid=(lo+hi)>>1;
+    if(textFits(text.slice(0,points[mid].pos),index)){bestIndex=mid;lo=mid+1;}else hi=mid-1;
   }
-  if(current) pieces.push(current);
-  return pieces;
-}
-function takeFittingChunk(text,index){
-  const clean=String(text||'').replace(/\r/g,'').trim();
-  if(!clean) return {chunk:'',rest:''};
-  const {width,maxLines}=layoutFor(index);
-  const tokens=tokenize(clean);
-  let line=1, lineWidth=0, lastUsed=-1, lastBreak=-1, charsUsed=0;
-  const spaceW=measureWidth(' ');
-
-  for(let i=0;i<tokens.length;i++){
-    const tok=tokens[i];
-    if(tok.type==='newline'){
-      if(line>=maxLines) break;
-      line++; lineWidth=0; lastUsed=i; lastBreak=i; charsUsed+=1; continue;
-    }
-    if(tok.type==='space'){
-      if(lineWidth>0) lineWidth+=spaceW;
-      lastUsed=i; charsUsed+=1; continue;
-    }
-
-    let word=tok.value;
-    const wordW=measureWidth(word);
-    const gap=lineWidth>0?spaceW:0;
-    if(lineWidth+gap+wordW<=width){
-      lineWidth+=gap+wordW; lastUsed=i; charsUsed+=word.length; if(/[.!?;,:]$/.test(word)) lastBreak=i; continue;
-    }
-
-    if(wordW>width){
-      const pieces=segmentLongWord(word,width);
-      for(let p=0;p<pieces.length;p++){
-        const piece=pieces[p];
-        const pw=measureWidth(piece);
-        if(lineWidth>0){
-          if(line>=maxLines) return finalizeChunk(clean,tokens,lastUsed,lastBreak);
-          line++; lineWidth=0;
-        }
-        lineWidth=pw;
-        if(p<pieces.length-1){
-          if(line>=maxLines) return finalizeChunk(clean,tokens,lastUsed,lastBreak);
-          line++; lineWidth=0;
-        }
-      }
-      lastUsed=i; charsUsed+=word.length; continue;
-    }
-
-    if(line>=maxLines) break;
-    line++; lineWidth=wordW; lastUsed=i; charsUsed+=word.length;
+  if(bestIndex<0) return hardCut(text,index);
+  const maxPoint=points[bestIndex];
+  const floor=maxPoint.pos*.78;
+  let preferred=maxPoint;
+  for(let i=bestIndex;i>=0;i--){
+    const p=points[i];
+    if(p.pos<floor) break;
+    if(p.priority>preferred.priority || (p.priority===preferred.priority&&p.pos>preferred.pos)) preferred=p;
   }
-  return finalizeChunk(clean,tokens,lastUsed,lastBreak);
-}
-function tokensToText(tokens,endIndex){
-  if(endIndex<0) return '';
-  return tokens.slice(0,endIndex+1).map(t=>t.value).join('').replace(/[ \t]+\n/g,'\n').trimEnd();
-}
-function finalizeChunk(clean,tokens,lastUsed,lastBreak){
-  if(lastUsed<0){
-    const fallback=Math.max(1,Math.min(clean.length,Math.floor(layoutFor(0).width/Math.max(10,Number($('fontSizeInput').value||57)*.5))));
-    return {chunk:clean.slice(0,fallback).trimEnd(),rest:clean.slice(fallback).trimStart()};
-  }
-  let end=lastUsed;
-  if(lastBreak>=0 && lastBreak>=Math.floor(lastUsed*.68)) end=lastBreak;
-  const chunk=tokensToText(tokens,end);
-  const consumed=tokens.slice(0,end+1).map(t=>t.value).join('').length;
-  const rest=clean.slice(consumed).trimStart();
-  return {chunk:chunk||clean.slice(0,1),rest};
+  return preferred.pos;
 }
 function splitText(){
-  let rest=String($('bodyInput').value||'').replace(/\r/g,'').trim();
+  let rest=String($('bodyInput').value||'').replace(/\r\n?/g,'\n').trim();
   if(!rest) return [''];
-  const slides=[]; let guard=0;
-  while(rest && guard++<100){
-    const {chunk,rest:next}=takeFittingChunk(rest,slides.length);
-    slides.push(chunk||rest);
+  const slides=[];
+  let guard=0;
+  while(rest && guard++<120){
+    const cut=chooseCut(rest,slides.length);
+    const chunk=rest.slice(0,cut).trimEnd();
+    const next=rest.slice(cut).replace(/^\s+/u,'');
+    if(!chunk){
+      const safe=hardCut(rest,slides.length);
+      slides.push(rest.slice(0,safe));
+      rest=rest.slice(safe).replace(/^\s+/u,'');
+      continue;
+    }
+    slides.push(chunk);
     if(!next || next===rest) break;
     rest=next;
   }
+  if(rest && guard>=120) slides.push(rest);
   return slides.length?slides:[''];
 }
 
@@ -219,7 +201,7 @@ function applyVisuals(){
   c.style.setProperty('--muted',$('mutedColor').value);
   c.style.setProperty('--radius',`${$('radiusInput').value}px`);
   c.style.setProperty('--shadow',shadowCss($('shadowInput').value));
-  c.style.setProperty('--post-font',(FONT_MAP[$('fontSelect').value]||FONT_MAP.x).css);
+  c.style.setProperty('--post-font',selectedFontCss());
 }
 function renderText(el,text){
   el.replaceChildren();
@@ -319,11 +301,7 @@ function applyPreset(name){
   const p=PRESETS[name]; if(!p)return; state.preset=name; $('canvasColor').value=p.canvas; $('cardColor').value=p.card; $('textColor').value=p.text; $('mutedColor').value=p.muted; $('radiusInput').value=p.radius; $('shadowInput').value=p.shadow; $$('.preset').forEach(x=>x.classList.toggle('active',x.dataset.preset===name)); rebuildNow();
 }
 function setLanguage(lang){ state.lang=lang; document.documentElement.lang=lang; $$('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n)); $$('[data-i18n-option]').forEach(el=>el.textContent=t(el.dataset.i18nOption)); renderManager(); }
-async function ensureSelectedFont(){
-  if(!document.fonts?.load) return;
-  const size=Number($('fontSizeInput').value||57); const family=FONT_MAP[$('fontSelect').value]?.canvas||'Arial';
-  try{ await document.fonts.load(`400 ${size}px "${family}"`); }catch(_e){}
-}
+async function ensureSelectedFont(){ if(document.fonts?.ready) await document.fonts.ready; }
 async function renderPng(index){
   const prev=state.current; state.current=index; renderSlide(); await ensureSelectedFont(); if(document.fonts?.ready)await document.fonts.ready; await new Promise(r=>setTimeout(r,80));
   const cfg=FORMATS[state.format],scale=qualityScale();
@@ -352,8 +330,8 @@ function bindLiveInput(id){
   const eventName=(el.type==='checkbox'||el.tagName==='SELECT')?'change':'input';
   el.addEventListener(eventName,async()=>{
     if(id==='fontSizeInput') $('fontSizeValue').textContent=el.value;
-    if(id==='fontSelect'){ await ensureSelectedFont(); rebuildNow(); }
-    else if(id==='bodyInput') scheduleRebuild(35);
+    if(id==='fontSelect'){ rebuildNow(); }
+    else if(id==='bodyInput') scheduleRebuild(60);
     else rebuildNow();
   });
 }
@@ -373,5 +351,6 @@ $('downloadCurrentBtn').addEventListener('click',downloadCurrent); $('downloadCu
 $('qualitySelect').addEventListener('change',updateExportInfo); $('languageSelect').addEventListener('change',e=>setLanguage(e.target.value));
 window.addEventListener('resize',()=>{setView(state.view);fitCanvas();});
 
+window.ExplicaStudio={version:'14.0.0',rebuild:rebuildNow,getSlides:()=>state.slides.map(s=>s.content),getState:()=>({format:state.format,current:state.current,cards:state.slides.length,font:$('fontSelect').value,fontSize:Number($('fontSizeInput').value)})};
 setLanguage('pt-BR'); applyPreset('classic'); rebuildNow(); setView('create');
 if(document.fonts?.ready) document.fonts.ready.then(()=>{rebuildNow();fitCanvas();});
